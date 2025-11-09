@@ -1,59 +1,49 @@
 const User = require('../models/User');
 
-const temporaryUsers = [
-  {
-    _id: 1,
-    name: 'Administrador Liga',
-    email: 'admin@ligadeportiva.com',
-    role: 'admin'
-  },
-  {
-    _id: 2, 
-    name: 'Carlos Martínez',
-    email: 'carlos@ligadeportiva.com',
-    role: 'coach'
-  },
-  {
-    _id: 3,
-    name: 'Ana Rodríguez',
-    email: 'ana@ligadeportiva.com', 
-    role: 'player'
-  }
-];
-
 exports.getUsers = async (req, res) => {
   try {
-    // Intentar con la base de datos real
-    const users = await User.find().select('-password');
+    const users = await User.find()
+      .sort({ createdAt: -1 });
+    
     res.json({
       success: true,
       data: users,
-      count: users.length,
-      source: 'database'
+      count: users.length
     });
   } catch (error) {
-    // Si hay error, usar datos temporales
-    console.log('⚠️  Usando datos temporales - MongoDB no disponible');
-    res.json({
-      success: true,
-      data: temporaryUsers,
-      count: temporaryUsers.length,
-      source: 'temporary'
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener usuarios',
+      error: error.message
     });
   }
 };
 
 exports.createUser = async (req, res) => {
   try {
-    const user = new User(req.body);
+    const { name, email, password, role } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'El usuario ya existe'
+      });
+    }
+
+    const user = new User({
+      name,
+      email,
+      password, 
+      role: role || 'user'
+    });
+
     await user.save();
-    
-    const userWithoutPassword = user.toObject();
-    delete userWithoutPassword.password;
-    
+
     res.status(201).json({
       success: true,
-      data: userWithoutPassword
+      data: user,
+      message: 'Usuario creado exitosamente'
     });
   } catch (error) {
     res.status(400).json({

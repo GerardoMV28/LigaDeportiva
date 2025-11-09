@@ -6,6 +6,11 @@ const teamSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  sport: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Sport',
+    required: true // ✅ Nuevo campo requerido
+  },
   logo: {
     type: String,
     default: ''
