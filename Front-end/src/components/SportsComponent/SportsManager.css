@@ -1,0 +1,248 @@
+/* SportsManager.css */
+.sports-manager {
+  padding: 20px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+/* Posiciones Section */
+.positions-section {
+  margin: 25px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 2px dashed #dee2e6;
+}
+
+.positions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.positions-count {
+  background: #3498db;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Formulario para agregar posición */
+.add-position-form {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #e9ecef;
+}
+
+.add-position-form h5 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+}
+
+.position-inputs {
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.btn-add-position {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-add-position:hover:not(:disabled) {
+  background: #219a52;
+}
+
+.btn-add-position:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+}
+
+/* Lista de posiciones */
+.positions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+}
+
+.position-card {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  transition: all 0.3s ease;
+}
+
+.position-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.position-info {
+  flex: 1;
+}
+
+.position-info strong {
+  color: #2c3e50;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.position-abbr {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  background: #ecf0f1;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 5px;
+}
+
+.position-desc {
+  color: #7f8c8d;
+  font-size: 0.8rem;
+  margin: 5px 0 0 0;
+  font-style: italic;
+}
+
+.btn-remove-position {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.btn-remove-position:hover {
+  background: #c0392b;
+}
+
+/* Tarjetas de deportes mejoradas */
+.sports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.sport-card {
+  background: white;
+  border: 2px solid #ecf0f1;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.sport-card:hover {
+  border-color: #3498db;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.15);
+}
+
+.positions-summary {
+  margin: 15px 0;
+}
+
+.positions-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.position-tag {
+  background: #e3f2fd;
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #bbdefb;
+}
+
+.position-name {
+  font-weight: 600;
+  color: #1976d2;
+  font-size: 0.9rem;
+}
+
+.position-abbr {
+  background: #1976d2;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.sport-meta {
+  border-top: 1px solid #ecf0f1;
+  padding-top: 10px;
+  margin-top: 15px;
+}
+
+.created-date {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+}
+
+.no-positions {
+  text-align: center;
+  padding: 20px;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+.no-sports {
+  text-align: center;
+  padding: 40px;
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+/* Estados vacíos */
+.no-positions-text {
+  color: #95a5a6;
+  font-style: italic;
+  font-size: 0.9rem;
+  margin: 5px 0 0 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .position-inputs {
+    grid-template-columns: 1fr;
+  }
+  
+  .sports-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

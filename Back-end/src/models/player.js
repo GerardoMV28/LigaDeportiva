@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
 const playerSchema = new mongoose.Schema({
-  // Información personal
   firstName: {
     type: String,
     required: true,
@@ -27,10 +26,21 @@ const playerSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
-  identification: {
+  gender: { 
     type: String,
-    required: true,
-    unique: true,
+    enum: ['Masculino', 'Femenino', 'Otro', ''],
+    default: ''
+  },
+  nickname: { 
+    type: String,
+    trim: true
+  },
+  photo: {
+  type: String,
+  default: ''
+  },
+  birthCity: { 
+    type: String,
     trim: true
   },
   
@@ -48,16 +58,22 @@ const playerSchema = new mongoose.Schema({
     isPrimary: {
       type: Boolean,
       default: false
-    },
-    skillLevel: {
-      type: String,
-      enum: ['Principiante', 'Intermedio', 'Avanzado', 'Élite'],
-      default: 'Intermedio'
     }
   }],
   teamInternalId: {
     type: String,
     required: true
+  },
+  jerseyNumber: {
+    type: Number,
+    min: 1,
+    max: 99
+  },
+  yearsOfExperience: { // ✅ NUEVO CAMPO
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 50
   },
   
   // Características físicas
@@ -73,20 +89,17 @@ const playerSchema = new mongoose.Schema({
   },
   
   // Información adicional
-  jerseyNumber: {
-    type: Number,
-    min: 1,
-    max: 99
-  },
-  dominantFoot: {
+  hobbies: { // ✅ NUEVO CAMPO
     type: String,
-    enum: ['Derecho', 'Izquierdo', 'Ambidiestro', null],
-    default: null
+    trim: true
   },
-  experience: {
+  favoriteMusic: { // ✅ NUEVO CAMPO
     type: String,
-    enum: ['Principiante', 'Recreativo', 'Competitivo', 'Profesional'],
-    default: 'Recreativo'
+    trim: true
+  },
+  socialMedia: { // ✅ NUEVO CAMPO
+    type: String,
+    trim: true
   },
   
   // Estado del jugador
@@ -94,37 +107,26 @@ const playerSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  injuries: [{
-    description: String,
-    date: Date,
-    recoveryDate: Date,
-    status: {
-      type: String,
-      enum: ['Activo', 'En tratamiento', 'Recuperado'],
-      default: 'Activo'
-    }
-  }],
   
-  // Estadísticas
+  // Estadísticas - ACTUALIZAR para coincidir con el frontend
   stats: {
-    gamesPlayed: { type: Number, default: 0 },
-    goals: { type: Number, default: 0 },
-    assists: { type: Number, default: 0 },
-    yellowCards: { type: Number, default: 0 },
-    redCards: { type: Number, default: 0 }
+    individualWarnings: { type: Number, default: 0 },
+    accumulatedPoints: { type: Number, default: 0 },
+    gamesWon: { type: Number, default: 0 },
+    gamesLost: { type: Number, default: 0 },
+    totalWarnings: { type: Number, default: 0 }
   },
 
-  // ✅ AGREGAR este campo si existe en la base de datos
   registrationFolio: {
     type: String,
     unique: true,
-    sparse: true // ✅ Esto permite valores null sin conflictos de duplicados
+    sparse: true
   }
 }, {
   timestamps: true
 });
 
-// ✅ SOLO estos índices (elimina los duplicados)
+// Índices
 playerSchema.index({ team: 1, teamInternalId: 1 });
 
 // Métodos virtuales

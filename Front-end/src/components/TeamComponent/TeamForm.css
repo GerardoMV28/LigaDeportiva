@@ -305,3 +305,110 @@
     align-items: flex-start;
   }
 }
+
+/* Nuevos estilos para la sección de deporte */
+.form-section {
+    margin-bottom: 25px;
+}
+
+.sport-selector-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+}
+
+.selected-sport-info {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border: 2px solid #2ecc71;
+}
+
+.sport-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.sport-icon {
+    font-size: 1.5rem;
+}
+
+.sport-badge strong {
+    color: #2c3e50;
+    font-size: 1.2rem;
+}
+
+.sport-description {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.sport-positions-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.positions-count {
+    background: #3498db;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.positions-tags-mini {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.position-tag-mini {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border: 1px solid #bbdefb;
+}
+
+.more-positions-mini {
+    background: #f39c12;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+/* Mejora para el botón de submit cuando hay deporte seleccionado */
+.btn-submit:not(:disabled) {
+    background: #27ae60;
+}
+
+.btn-submit:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+}
+
+/* Ajustes responsive */
+@media (max-width: 768px) {
+    .sport-positions-preview {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .selected-sport-info {
+        padding: 12px;
+    }
+}

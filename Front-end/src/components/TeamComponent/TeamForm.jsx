@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
+import SportSelector from '../SportsComponent/SportSelector';
 import './TeamForm.css';
 
 const TeamForm = ({ onTeamCreated, onCancel }) => {
     const [formData, setFormData] = useState({
         name: '',
         colors: [],
-        logo: null
+        logo: null,
+        sport: null
     });
 
     const [previewLogo, setPreviewLogo] = useState(null);
     const [currentColor, setCurrentColor] = useState('#3498db');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Colores predefinidos para selección rápida
     const predefinedColors = [
@@ -26,9 +29,22 @@ const TeamForm = ({ onTeamCreated, onCancel }) => {
         }));
     };
 
+    const handleSportSelect = (sport) => {
+        setFormData(prev => ({
+            ...prev,
+            sport: sport
+        }));
+    };
+
     const handleLogoChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Validar tamaño del archivo (5MB máximo)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('El archivo es demasiado grande. Máximo 5MB permitido.');
+                return;
+            }
+            
             setFormData(prev => ({ ...prev, logo: file }));
 
             // Crear preview de la imagen
@@ -58,22 +74,34 @@ const TeamForm = ({ onTeamCreated, onCancel }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
-        // Validaciones básicas
+        // Validaciones
         if (!formData.name.trim()) {
             alert('Por favor ingresa el nombre del equipo');
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (!formData.sport) {
+            alert('Por favor selecciona un deporte para el equipo');
+            setIsSubmitting(false);
             return;
         }
 
         if (formData.colors.length === 0) {
             alert('Por favor selecciona al menos un color para el equipo');
+            setIsSubmitting(false);
             return;
         }
 
         try {
-            // Crear FormData para enviar archivos
+            // ✅ USAR FORMDATA (como está configurado en tu backend)
             const submitData = new FormData();
-            submitData.append('name', formData.name);
+            submitData.append('name', formData.name.trim());
+            submitData.append('sport', formData.sport._id);
+            
+            // Agregar cada color individualmente
             formData.colors.forEach(color => {
                 submitData.append('colors', color);
             });
@@ -82,33 +110,46 @@ const TeamForm = ({ onTeamCreated, onCancel }) => {
                 submitData.append('logo', formData.logo);
             }
 
-            // Llamar a la API del backend
+            console.log('Enviando datos del equipo...');
+            console.log('Nombre:', formData.name);
+            console.log('Deporte ID:', formData.sport._id);
+            console.log('Colores:', formData.colors);
+            console.log('Logo:', formData.logo ? 'Sí' : 'No');
+
             const response = await fetch('http://localhost:4000/api/teams', {
                 method: 'POST',
                 body: submitData
-                // No headers - FormData los establece automáticamente
+                // ✅ NO incluir headers - FormData los establece automáticamente
             });
 
             const result = await response.json();
+            console.log('Respuesta del servidor:', result);
 
             if (result.success) {
-                alert('Equipo registrado exitosamente!');
+                alert(`✅ ${result.message}`);
 
                 if (onTeamCreated) {
-                    onTeamCreated(result.data); // Enviar el equipo creado con ID
+                    onTeamCreated(result.data);
                 }
 
                 // Resetear formulario
-                setFormData({ name: '', colors: [], logo: null });
+                setFormData({ 
+                    name: '', 
+                    colors: [], 
+                    logo: null, 
+                    sport: null 
+                });
                 setPreviewLogo(null);
 
             } else {
-                alert(`Error: ${result.message}`);
+                alert(`❌ Error: ${result.message}`);
             }
 
         } catch (error) {
             console.error('Error al registrar equipo:', error);
-            alert('Error de conexión con el servidor');
+            alert('❌ Error de conexión con el servidor');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -120,6 +161,52 @@ const TeamForm = ({ onTeamCreated, onCancel }) => {
             </div>
 
             <form onSubmit={handleSubmit} className="team-form">
+                {/* Selector de Deporte */}
+                <div className="form-section">
+                    <label className="form-label">
+                        ⚽ Deporte del Equipo *
+                    </label>
+                    <div className="sport-selector-section">
+                        <SportSelector 
+                            onSportSelect={handleSportSelect}
+                            title="Selecciona el deporte que practicará el equipo"
+                        />
+                        
+                        {formData.sport && (
+                            <div className="selected-sport-info">
+                                <div className="sport-badge">
+                                    <span className="sport-icon">
+                                        {formData.sport.name === 'Fútbol' ? '⚽' : 
+                                         formData.sport.name === 'Baloncesto' ? '🏀' :
+                                         formData.sport.name === 'Voleibol' ? '🏐' : '🏆'}
+                                    </span>
+                                    <strong>{formData.sport.name}</strong>
+                                </div>
+                                <p className="sport-description">
+                                    {formData.sport.description}
+                                </p>
+                                <div className="sport-positions-preview">
+                                    <span className="positions-count">
+                                        {formData.sport.positions?.length || 0} posiciones disponibles
+                                    </span>
+                                    <div className="positions-tags-mini">
+                                        {formData.sport.positions?.slice(0, 4).map((position, index) => (
+                                            <span key={index} className="position-tag-mini">
+                                                {position.abbreviation}
+                                            </span>
+                                        ))}
+                                        {formData.sport.positions?.length > 4 && (
+                                            <span className="more-positions-mini">
+                                                +{formData.sport.positions.length - 4}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 {/* Nombre del Equipo */}
                 <div className="form-group">
                     <label htmlFor="name" className="form-label">
@@ -132,8 +219,9 @@ const TeamForm = ({ onTeamCreated, onCancel }) => {
                         value={formData.name}
                         onChange={handleInputChange}
                         className="form-input"
-                        placeholder="Ej: Águilas FC, Tigres United..."
+                        placeholder={`Ej: ${formData.sport ? formData.sport.name + ' ' : ''}Club, ${formData.sport ? formData.sport.name + ' ' : ''}Team...`}
                         required
+                        disabled={isSubmitting}
                     />
                 </div>
 
@@ -150,6 +238,7 @@ const TeamForm = ({ onTeamCreated, onCancel }) => {
                             onChange={handleLogoChange}
                             accept="image/*"
                             className="logo-input"
+                            disabled={isSubmitting}
                         />
                         <label htmlFor="logo" className="logo-upload-label">
                             📁 Seleccionar Archivo
@@ -167,6 +256,7 @@ const TeamForm = ({ onTeamCreated, onCancel }) => {
                                     setPreviewLogo(null);
                                     setFormData(prev => ({ ...prev, logo: null }));
                                 }}
+                                disabled={isSubmitting}
                             >
                                 ❌
                             </button>
@@ -188,11 +278,13 @@ const TeamForm = ({ onTeamCreated, onCancel }) => {
                                 value={currentColor}
                                 onChange={(e) => setCurrentColor(e.target.value)}
                                 className="color-picker"
+                                disabled={isSubmitting}
                             />
                             <button
                                 type="button"
                                 onClick={addColor}
                                 className="add-color-btn"
+                                disabled={isSubmitting}
                             >
                                 ➕ Agregar Color
                             </button>
@@ -210,6 +302,7 @@ const TeamForm = ({ onTeamCreated, onCancel }) => {
                                         style={{ backgroundColor: color }}
                                         onClick={() => setCurrentColor(color)}
                                         title={color}
+                                        disabled={isSubmitting}
                                     />
                                 ))}
                             </div>
@@ -232,6 +325,7 @@ const TeamForm = ({ onTeamCreated, onCancel }) => {
                                             type="button"
                                             onClick={() => removeColor(color)}
                                             className="remove-color-btn"
+                                            disabled={isSubmitting}
                                         >
                                             ✕
                                         </button>
@@ -248,14 +342,16 @@ const TeamForm = ({ onTeamCreated, onCancel }) => {
                         type="button"
                         onClick={onCancel}
                         className="btn-cancel"
+                        disabled={isSubmitting}
                     >
-                        ↩️ Cancelar
+                        {isSubmitting ? '⏳' : '↩️'} Cancelar
                     </button>
                     <button
                         type="submit"
                         className="btn-submit"
+                        disabled={!formData.sport || isSubmitting}
                     >
-                        ✅ Guardar Equipo
+                        {isSubmitting ? '⏳ Guardando...' : `✅ Guardar Equipo ${formData.sport ? `de ${formData.sport.name}` : ''}`}
                     </button>
                 </div>
             </form>

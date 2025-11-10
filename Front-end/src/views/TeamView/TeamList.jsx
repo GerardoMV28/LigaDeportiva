@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import TeamForm from '../components/TeamForm';
+import TeamForm from '../../components/TeamComponent/TeamForm';
 import './TeamList.css';
 
 const TeamList = () => {

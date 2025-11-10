@@ -1,8 +1,9 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import UserList from './views/UserList';
-import TeamList from './views/TeamList';
-import Players from './views/Players';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
+import UserList from "./views/UserView/UserList"; 
+import TeamList from "./views/TeamView/TeamList"; 
+import Players from "./views/PlayersView/Players";  
+import AdminPage from "./views/AdminView/AdminPage";
 import './App.css';
 
 function App() {
@@ -35,6 +36,13 @@ function App() {
               >
                 👟 Jugadores
               </NavLink>
+              {/* 🔥 NUEVO: Enlace al Admin Dashboard */}
+              <NavLink 
+                to="/admin" 
+                className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+              >
+                👑 Admin
+              </NavLink>
             </div>
           </div>
         </nav>
@@ -46,6 +54,8 @@ function App() {
             <Route path="/users" element={<UserList />} />
             <Route path="/teams" element={<TeamList />} />
             <Route path="/players" element={<Players />} />
+            {/* 🔥 NUEVO: Ruta del Admin Dashboard */}
+            <Route path="/admin" element={<AdminPage />} />
           </Routes>
         </main>
       </div>

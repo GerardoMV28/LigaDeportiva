@@ -14,45 +14,52 @@ const UserList = () => {
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
+const fetchUsers = async () => {
+  try {
+    setLoading(true);
+    setError('');
+    
+    console.log('🔄 Cargando usuarios del sistema...');
+    
+    let response;
     try {
-      setLoading(true);
-      setError('');
-      
-      console.log('🔄 Intentando conectar con el backend...');
-      
-      // Intentar primero con la ruta relativa (proxy)
-      let response;
-      try {
-        response = await axios.get('/api/users');
-        console.log('✅ Conexión via PROXY exitosa');
-      } catch (proxyError) {
-        console.log('⚠️ Proxy falló, intentando conexión directa...');
-        response = await axios.get(API_URL);
-        console.log('✅ Conexión DIRECTA exitosa');
-      }
-      
-      console.log('📊 Datos recibidos:', response.data);
-      
-      if (response.data.success) {
-        setUsers(response.data.data);
-      } else {
-        setError('Error en la respuesta del servidor');
-      }
-    } catch (error) {
-      console.error('❌ Error completo:', error);
-      setError(`Error de conexión: ${error.message}`);
-      
-      // Datos de ejemplo como fallback
+      // Primero intenta con la ruta de usuarios
+      response = await axios.get('/api/users');
+      console.log('✅ Usuarios cargados desde /api/users:', response.data);
+    } catch (userError) {
+      console.log('⚠️ /api/users no disponible, intentando con datos de ejemplo');
+      // Si falla, usar datos de ejemplo
       setUsers([
-        { _id: '1', name: 'Gerardo Admin (Ejemplo)', email: 'gerardo@ligadeportiva.com', role: 'admin', createdAt: new Date() },
-        { _id: '2', name: 'Carlos Entrenador (Ejemplo)', email: 'carlos@ligadeportiva.com', role: 'coach', createdAt: new Date() },
-        { _id: '3', name: 'Ana Jugadora (Ejemplo)', email: 'ana@ligadeportiva.com', role: 'player', createdAt: new Date() }
+        { 
+          _id: '1', 
+          name: 'Gerardo Admin', 
+          email: 'gerardo@ligadeportiva.com', 
+          role: 'admin', 
+          createdAt: new Date() 
+        },
+        { 
+          _id: '2', 
+          name: 'Carlos Coach', 
+          email: 'carlos@ligadeportiva.com', 
+          role: 'coach', 
+          createdAt: new Date() 
+        }
       ]);
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
+    
+    if (response.data.success) {
+      setUsers(response.data.data);
+    } else {
+      setError('Error en la respuesta del servidor');
+    }
+  } catch (error) {
+    console.error('❌ Error cargando usuarios:', error);
+    setError(`Error de conexión: ${error.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Función para obtener la clase CSS del rol
   const getRoleClass = (role) => {
