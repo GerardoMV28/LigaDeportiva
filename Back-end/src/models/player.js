@@ -126,10 +126,8 @@ const playerSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Índices
 playerSchema.index({ team: 1, teamInternalId: 1 });
 
-// Métodos virtuales
 playerSchema.virtual('fullName').get(function() {
   return `${this.firstName} ${this.lastName}`;
 });

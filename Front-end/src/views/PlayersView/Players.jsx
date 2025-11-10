@@ -615,17 +615,20 @@ const Players = () => {
 
       {/* ✅ MODAL DE DETALLES DEL JUGADOR */}
       {isModalOpen && (
-        <PlayerDetailsModal
-          player={selectedPlayer}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          getPlayerSport={getPlayerSport}
-          getPlayerTeam={getPlayerTeam}
-          getPrimaryPosition={getPrimaryPosition}
-          calculateAge={calculateAge}
-          getPlayerStats={getPlayerStats}
-        />
-      )}
+  <PlayerDetailsModal
+    player={selectedPlayer}
+    isOpen={isModalOpen}
+    onClose={handleCloseModal}
+    getPlayerSport={getPlayerSport}
+    getPlayerTeam={getPlayerTeam}
+    getPrimaryPosition={getPrimaryPosition}
+    calculateAge={calculateAge}
+    getPlayerStats={getPlayerStats}
+    sports={sports} 
+    sportPositions={sportPositions}
+    teams={teams}
+    />
+    )}
     </div>
   );
 };

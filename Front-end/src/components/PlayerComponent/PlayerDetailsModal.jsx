@@ -1,15 +1,16 @@
 import React from 'react';
 import './PlayerDetailsModal.css';
 
-const PlayerDetailsModal = ({ player, isOpen, onClose, getPlayerSport, getPlayerTeam, getPrimaryPosition, calculateAge, getPlayerStats }) => {
+const PlayerDetailsModal = ({ player, isOpen, onClose, getPlayerSport, getPlayerTeam, getPrimaryPosition, calculateAge, getPlayerStats, sports, sportPositions, teams }) => {
   if (!isOpen || !player) return null;
 
   // Agrega esto justo después del if (!isOpen || !player) return null;
-console.log('Datos del jugador en el modal:', player);
-console.log('Posiciones del jugador:', player.positions);
-console.log('Estructura de las posiciones:', player.positions);
-console.log('Primera posición:', player.positions[0]);
-console.log('Segunda posición:', player.positions[1]);
+  console.log('Datos del jugador en el modal:', player);
+  console.log('Posiciones del jugador:', player.positions);
+  console.log('Estructura de las posiciones:', player.positions);
+  console.log('Primera posición:', player.positions[0]);
+  console.log('Segunda posición:', player.positions[1]);
+
   const stats = getPlayerStats(player);
   const age = calculateAge(player.birthDate);
 
@@ -32,6 +33,32 @@ console.log('Segunda posición:', player.positions[1]);
       'Gimnasia': '🤸‍♂️'
     };
     return icons[sportName] || '🏆';
+  };
+
+  // Función simplificada para obtener el nombre de la posición por ID
+  const getPositionName = (positionId) => {
+    if (!positionId) return 'Sin posición';
+    
+    const positionIdStr = positionId.toString();
+
+    // Buscar en todos los deportes
+    for (const sport of sports) {
+      const sportId = sport._id.toString();
+      const positions = sportPositions[sportId];
+      
+      if (positions && positions.length > 0) {
+        const position = positions.find(p => {
+          const availableId = p._id?.toString();
+          return availableId === positionIdStr;
+        });
+        
+        if (position) {
+          return `${position.name}`;
+        }
+      }
+    }
+
+    return 'Posición no especificada';
   };
 
   return (
@@ -214,8 +241,8 @@ console.log('Segunda posición:', player.positions[1]);
                   {player.positions.map((pos, index) => (
                     <div key={index} className="position-item-modal">
                       <span className="position-name-modal">
-                        {getPrimaryPosition(player) === pos.name ? '⭐ ' : ''}
-                        {pos.name}
+                        {pos.isPrimary ? '⭐ ' : ''}
+                        {getPositionName(pos.position)} {/* CAMBIADO: usa la nueva función */}
                       </span>
                       <span className="position-type-modal">
                         {pos.isPrimary ? 'Principal' : 'Secundaria'}
