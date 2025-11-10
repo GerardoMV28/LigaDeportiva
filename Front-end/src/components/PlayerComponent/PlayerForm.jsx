@@ -596,6 +596,18 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
         </div>
 
         <div className="form-group">
+        <label htmlFor="phone">Teléfono</label>
+        <input
+          type="tel"
+          id="phone"
+          name="phone"
+          value={formData.phone}
+          onChange={handleInputChange}
+          placeholder="Ej: +52 123 456 7890"
+        />
+        
+      </div>
+        <div className="form-group">
           <label htmlFor="photo">Foto del Jugador (URL)</label>
           <input
             type="text"
