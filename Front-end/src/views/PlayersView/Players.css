@@ -576,3 +576,32 @@
   font-size: 18px;
   border-radius: 50%;
 }
+
+/* 🔽 BADGE DE EQUIPO MÁS PEQUEÑO - AGREGAR AL FINAL DE Players.css */
+.player-team-badge {
+  background: #e3f2fd;
+  padding: 4px 8px; /* 🔽 REDUCIDO de 8px 12px */
+  border-radius: 12px; /* 🔽 REDUCIDO de 20px */
+  display: flex;
+  align-items: center;
+  gap: 6px; /* 🔽 REDUCIDO de 8px */
+  font-size: 0.75rem; /* 🔽 REDUCIDO de 0.9rem */
+  font-weight: 600;
+  color: #1976d2;
+  border: 1px solid #bbdefb;
+  white-space: nowrap;
+  max-width: 120px; /* 🔽 LIMITA EL ANCHO MÁXIMO */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-icon {
+  font-size: 0.9rem; /* 🔽 REDUCIDO de 1.2rem */
+  flex-shrink: 0;
+}
+
+.team-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
