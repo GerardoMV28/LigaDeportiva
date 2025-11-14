@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const Sport = require('../models/sport'); // ✅ AGREGAR ESTA IMPORTACIÓN
 
 // ✅ CORREGIDO: createTransporter → createTransport
 const transporter = nodemailer.createTransport({
@@ -18,6 +19,27 @@ transporter.verify((error, success) => {
   }
 });
 
+// ✅ FUNCIÓN PARA OBTENER NOMBRE DE POSICIÓN
+const getPositionName = async (positionId, sportId) => {
+  try {
+    if (!positionId || !sportId) return 'Por asignar';
+    
+    const sport = await Sport.findById(sportId).populate('positions');
+    
+    if (!sport || !sport.positions) return 'Por asignar';
+    
+    // Buscar la posición por ID
+    const position = sport.positions.find(p => 
+      p._id.toString() === positionId.toString()
+    );
+    
+    return position ? `${position.name} (${position.abbreviation})` : 'Por asignar';
+  } catch (error) {
+    console.error('❌ Error obteniendo nombre de posición:', error);
+    return 'Por asignar';
+  }
+};
+
 exports.sendRegistrationEmail = async (req, res) => {
   try {
     const { player, team, sport } = req.body;
@@ -35,6 +57,19 @@ exports.sendRegistrationEmail = async (req, res) => {
         success: false,
         message: 'Datos del equipo incompletos'
       });
+    }
+
+    // ✅ OBTENER NOMBRE DE POSICIÓN PRINCIPAL
+    let primaryPositionName = 'Por asignar';
+    
+    if (player.positions && player.positions.length > 0) {
+      const primaryPosition = player.positions.find(p => p.isPrimary);
+      
+      if (primaryPosition && primaryPosition.position && sport?._id) {
+        console.log('🔍 Buscando nombre para posición:', primaryPosition.position);
+        primaryPositionName = await getPositionName(primaryPosition.position, sport._id);
+        console.log('✅ Nombre de posición encontrado:', primaryPositionName);
+      }
     }
 
     const mailOptions = {
@@ -80,7 +115,14 @@ exports.sendRegistrationEmail = async (req, res) => {
               <h4>👤 Tus Datos:</h4>
               <p><strong>Nombre:</strong> ${player.firstName} ${player.lastName}</p>
               <p><strong>Email:</strong> ${player.email}</p>
-              <p><strong>Posición:</strong> ${player.positions?.find(p => p.isPrimary)?.position || 'Por asignar'}</p>
+              <p><strong>Posición Principal:</strong> ${primaryPositionName}</p>
+              ${player.positions && player.positions.length > 1 ? `
+                <p><strong>Posiciones Secundarias:</strong> ${await Promise.all(
+                  player.positions
+                    .filter(p => !p.isPrimary)
+                    .map(async pos => await getPositionName(pos.position, sport?._id))
+                ).then(names => names.join(', '))}</p>
+              ` : ''}
             </div>
             
             <p>Guarda este folio para cualquier consulta o aclaración.</p>

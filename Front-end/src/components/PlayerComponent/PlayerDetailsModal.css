@@ -335,3 +335,16 @@
     right: 16px;
   }
 }
+
+/* En PlayerDetailsModal.css */
+.player-modal-avatar-fallback.hidden {
+  display: none;
+}
+
+.player-modal-photo {
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border: 3px solid #007bff;
+}

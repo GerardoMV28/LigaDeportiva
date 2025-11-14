@@ -9,7 +9,15 @@ const teamSchema = new mongoose.Schema({
   sport: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Sport',
-    required: true // ✅ Nuevo campo requerido
+    required: true
+  },
+  category: {
+    type: String,
+    trim: true
+  },
+  description: {
+    type: String,
+    trim: true
   },
   logo: {
     type: String,
@@ -18,6 +26,11 @@ const teamSchema = new mongoose.Schema({
   colors: [{
     type: String
   }],
+  
+  gamesPlayed: {
+    type: Number,
+    default: 0
+  },
   gamesWon: {
     type: Number,
     default: 0
@@ -26,20 +39,57 @@ const teamSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  totalWarnings: {
+  gamesDrawn: {
     type: Number,
     default: 0
   },
-  registrationDate: {
-    type: Date,
-    default: Date.now
+  goalsFor: {
+    type: Number,
+    default: 0
+  },
+  goalsAgainst: {
+    type: Number,
+    default: 0
+  },
+  points: {
+    type: Number,
+    default: 0
+  },
+
+  foundedYear: {
+    type: Number
+  },
+  location: {
+    type: String,
+    trim: true
+  },
+  coach: {
+    type: String,
+    trim: true
+  },
+  captain: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Player'
   },
   isActive: {
     type: Boolean,
     default: true
+  },
+  registrationDate: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true
+});
+
+teamSchema.virtual('goalDifference').get(function() {
+  return this.goalsFor - this.goalsAgainst;
+});
+
+teamSchema.virtual('winPercentage').get(function() {
+  if (this.gamesPlayed === 0) return 0;
+  return ((this.gamesWon / this.gamesPlayed) * 100).toFixed(1);
 });
 
 module.exports = mongoose.model('Team', teamSchema);

@@ -229,3 +229,34 @@
   color: #95a5a6;
   font-size: 0.9em;
 }
+
+/* Agrega esto a tu TeamList.css */
+.error-message {
+  text-align: center;
+  padding: 60px 20px;
+  background: #fed7d7;
+  border: 1px solid #feb2b2;
+  border-radius: 12px;
+  color: #c53030;
+}
+
+.error-message h2 {
+  margin-bottom: 15px;
+}
+
+.retry-btn {
+  background: #e53e3e;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 15px;
+  transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+  background: #c53030;
+  transform: translateY(-2px);
+}

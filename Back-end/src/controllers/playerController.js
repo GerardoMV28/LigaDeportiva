@@ -3,7 +3,6 @@ const Team = require('../models/team');
 const Sport = require('../models/sport');
 const mongoose = require('mongoose');
 
-// Obtener todos los jugadores
 exports.getPlayers = async (req, res) => {
   try {
     const { team, sport, position } = req.query;
@@ -38,7 +37,6 @@ exports.getPlayers = async (req, res) => {
   }
 };
 
-// Obtener jugador por ID
 exports.getPlayerById = async (req, res) => {
   try {
     const player = await Player.findById(req.params.id)
@@ -65,12 +63,10 @@ exports.getPlayerById = async (req, res) => {
   }
 };
 
-// Crear nuevo jugador CON SISTEMA DE FOLIOS
 exports.createPlayer = async (req, res) => {
   try {
     const { team, positions, ...playerData } = req.body;
     
-    // Validar que el equipo exista
     const teamExists = await Team.findById(team).populate('sport');
     if (!teamExists) {
       return res.status(400).json({
@@ -79,26 +75,31 @@ exports.createPlayer = async (req, res) => {
       });
     }
     
-    // ✅ GENERAR FOLIO AUTOMÁTICO
-    // Contar jugadores existentes en el equipo para el consecutivo
     const playersInTeam = await Player.countDocuments({ team });
-    const teamConsecutive = (playersInTeam + 1).toString().padStart(3, '0');
-    const internalConsecutive = (playersInTeam + 1).toString().padStart(3, '0');
+    const playerConsecutive = (playersInTeam + 1).toString().padStart(3, '0');
     
-    // Generar folio: NombreEquipo-001-Nombre-001
+    // El consecutivo de EQUIPO siempre es 001
+    const teamConsecutive = "001";
+    
     const teamNameClean = teamExists.name.replace(/\s+/g, '');
     const firstNameClean = playerData.firstName.replace(/\s+/g, '');
-    let registrationFolio = `${teamNameClean}-${teamConsecutive}-${firstNameClean}-${internalConsecutive}`;
+    let registrationFolio = `${teamNameClean}-${teamConsecutive}-${firstNameClean}-${playerConsecutive}`;
     
-    // Validar que el folio sea único
+    console.log(`📝 Generando folio: ${registrationFolio}`);
+    console.log(`👥 Jugadores en equipo: ${playersInTeam}`);
+    console.log(`🔢 Consecutivo de jugador: ${playerConsecutive}`);
+    
+    
     const existingFolio = await Player.findOne({ registrationFolio });
     if (existingFolio) {
-      // Si hay duplicado, agregar timestamp
+      console.log('⚠️ Folio duplicado, agregando timestamp...');
+      
       const timestamp = Date.now().toString().slice(-3);
       registrationFolio = `${teamNameClean}-${teamConsecutive}-${firstNameClean}-${timestamp}`;
+      console.log(`🔄 Nuevo folio: ${registrationFolio}`);
     }
     
-    // Validar que el ID interno sea único en el equipo
+    
     const existingPlayer = await Player.findOne({
       team,
       teamInternalId: playerData.teamInternalId
@@ -111,7 +112,7 @@ exports.createPlayer = async (req, res) => {
       });
     }
     
-    // Validar posiciones contra el deporte del equipo
+    
     if (positions && positions.length > 0) {
       const sportPositions = teamExists.sport.positions || [];
       const sportPositionIds = sportPositions.map(p => p._id ? p._id.toString() : p);
@@ -129,7 +130,6 @@ exports.createPlayer = async (req, res) => {
         }
       }
       
-      // Validar que solo haya una posición principal
       const primaryPositions = positions.filter(p => p.isPrimary);
       if (primaryPositions.length > 1) {
         return res.status(400).json({
@@ -143,7 +143,7 @@ exports.createPlayer = async (req, res) => {
       ...playerData,
       team,
       positions: positions || [],
-      registrationFolio // ✅ ASIGNAR FOLIO AUTOMÁTICO
+      registrationFolio 
     });
     
     await player.save();
@@ -152,6 +152,7 @@ exports.createPlayer = async (req, res) => {
     
     res.status(201).json({
       success: true,
+
       data: player,
       message: 'Jugador creado exitosamente'
     });
@@ -164,7 +165,6 @@ exports.createPlayer = async (req, res) => {
   }
 };
 
-// Actualizar jugador
 exports.updatePlayer = async (req, res) => {
   try {
     const { positions, ...updateData } = req.body;
@@ -178,7 +178,6 @@ exports.updatePlayer = async (req, res) => {
       });
     }
     
-    // Validar posiciones si se están actualizando
     if (positions) {
       const team = await Team.findById(player.team).populate('sport');
       const sportPositions = team.sport.positions || [];
@@ -192,8 +191,7 @@ exports.updatePlayer = async (req, res) => {
           });
         }
       }
-      
-      // Validar que solo haya una posición principal
+
       const primaryPositions = positions.filter(p => p.isPrimary);
       if (primaryPositions.length > 1) {
         return res.status(400).json({
@@ -227,7 +225,6 @@ exports.updatePlayer = async (req, res) => {
   }
 };
 
-// Eliminar jugador
 exports.deletePlayer = async (req, res) => {
   try {
     const player = await Player.findByIdAndDelete(req.params.id);
@@ -253,7 +250,6 @@ exports.deletePlayer = async (req, res) => {
   }
 };
 
-// Obtener jugadores por equipo
 exports.getPlayersByTeam = async (req, res) => {
   try {
     const players = await Player.find({ team: req.params.teamId })
@@ -275,7 +271,6 @@ exports.getPlayersByTeam = async (req, res) => {
   }
 };
 
-// Obtener estadísticas de jugadores por equipo
 exports.getTeamPlayerStats = async (req, res) => {
   try {
     const teamId = req.params.teamId;
@@ -309,7 +304,6 @@ exports.getTeamPlayerStats = async (req, res) => {
   }
 };
 
-// Obtener todas las posiciones disponibles
 exports.getAllPositions = async (req, res) => {
   try {
     const allPositions = {

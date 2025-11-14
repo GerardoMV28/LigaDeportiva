@@ -66,19 +66,25 @@ const PlayerDetailsModal = ({ player, isOpen, onClose, getPlayerSport, getPlayer
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         {/* Header del Modal */}
         <div className="modal-header">
-          <div className="player-modal-avatar">
-            {player.photo ? (
-              <img 
-                src={player.photo} 
-                alt={`${player.firstName} ${player.lastName}`} 
-                className="player-modal-photo"
-              />
-            ) : (
-              <div className="player-modal-avatar-fallback">
-                {player.firstName?.[0]}{player.lastName?.[0]}
-              </div>
-            )}
-          </div>
+<div className="player-modal-avatar">
+  {player.photo ? (
+    <img 
+      src={player.photo} 
+      alt={`${player.firstName} ${player.lastName}`} 
+      className="player-modal-photo"
+      onError={(e) => {
+        // Si la imagen falla al cargar, mostrar el avatar de fallback
+        e.target.style.display = 'none';
+        e.target.nextSibling.style.display = 'flex';
+      }}
+    />
+  ) : null}
+  <div 
+    className={`player-modal-avatar-fallback ${player.photo ? 'hidden' : ''}`}
+  >
+    {player.firstName?.[0]}{player.lastName?.[0]}
+  </div>
+</div>
           <div className="player-modal-basic-info">
             <h2>{player.firstName} {player.lastName}</h2>
             <p className="player-modal-email">{player.email}</p>

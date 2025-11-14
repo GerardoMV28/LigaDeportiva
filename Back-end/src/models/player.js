@@ -109,13 +109,50 @@ const playerSchema = new mongoose.Schema({
   },
   
   // Estadísticas - ACTUALIZAR para coincidir con el frontend
-  stats: {
-    individualWarnings: { type: Number, default: 0 },
-    accumulatedPoints: { type: Number, default: 0 },
-    gamesWon: { type: Number, default: 0 },
-    gamesLost: { type: Number, default: 0 },
-    totalWarnings: { type: Number, default: 0 }
-  },
+// Estadísticas - ACTUALIZAR para coincidir con el frontend
+stats: {
+  // Estadísticas generales
+  gamesPlayed: { type: Number, default: 0 },
+  gamesWon: { type: Number, default: 0 },
+  gamesLost: { type: Number, default: 0 },
+  accumulatedPoints: { type: Number, default: 0 },
+  individualWarnings: { type: Number, default: 0 },
+  
+  // Estadísticas de fútbol
+  goals: { type: Number, default: 0 },
+  assists: { type: Number, default: 0 },
+  yellowCards: { type: Number, default: 0 },
+  redCards: { type: Number, default: 0 },
+  
+  // Estadísticas de otros deportes
+  points: { type: Number, default: 0 },
+  rebounds: { type: Number, default: 0 },
+  fouls: { type: Number, default: 0 },
+  bestTime: { type: String, default: '' },
+  swimStyle: { type: String, default: '' },
+  metersSwum: { type: Number, default: 0 },
+  competitions: { type: Number, default: 0 },
+  wins: { type: Number, default: 0 },
+  bestMark: { type: String, default: '' },
+  distance: { type: String, default: '' },
+  podiums: { type: Number, default: 0 },
+  records: { type: Number, default: 0 },
+  tries: { type: Number, default: 0 },
+  conversions: { type: Number, default: 0 },
+  penalties: { type: Number, default: 0 },
+  cards: { type: Number, default: 0 },
+  exclusions: { type: Number, default: 0 },
+  saves: { type: Number, default: 0 },
+  setsWon: { type: Number, default: 0 },
+  tournaments: { type: Number, default: 0 },
+  sets: { type: Number, default: 0 },
+  races: { type: Number, default: 0 },
+  kilometers: { type: Number, default: 0 },
+  medals: { type: Number, default: 0 },
+  maxScore: { type: Number, default: 0 },
+  apparatus: { type: String, default: '' },
+  level: { type: String, default: '' }
+},
 
   registrationFolio: {
     type: String,

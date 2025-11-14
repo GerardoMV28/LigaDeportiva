@@ -37,6 +37,35 @@ const statesAndCities = {
   'Zacatecas': ['Zacatecas', 'Fresnillo', 'Guadalupe', 'Jerez', 'Calera']
 };
 
+// Función para subir foto al backend
+const uploadPlayerPhoto = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    console.log('📤 Subiendo foto de jugador...', file.name);
+
+    const response = await fetch('http://localhost:4000/api/players/upload-photo', {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log('✅ Foto subida exitosamente:', result.path);
+      // ✅ CORREGIDO: Retornar la URL completa correcta
+      return `http://localhost:4000${result.path}`;
+    } else {
+      console.error('❌ Error subiendo foto:', result.message);
+      throw new Error(result.message || 'Error al subir la foto');
+    }
+  } catch (error) {
+    console.error('❌ Error en uploadPlayerPhoto:', error);
+    throw error;
+  }
+};
+
 const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
   const [formData, setFormData] = useState({
     // Información Personal
@@ -64,13 +93,34 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
     height: '',
     weight: '',
     
-    // Estadísticas
+    // ✅ ESTADÍSTICAS ACTUALIZADAS - Coincidir con frontend
     stats: {
-      individualWarnings: 0,
-      accumulatedPoints: 0,
+      // Estadísticas generales
+      gamesPlayed: 0,
       gamesWon: 0,
       gamesLost: 0,
-      totalWarnings: 0
+      accumulatedPoints: 0,
+      individualWarnings: 0,
+      
+      // Estadísticas de fútbol
+      goals: 0,
+      assists: 0,
+      yellowCards: 0,
+      redCards: 0,
+      
+      // Estadísticas para otros deportes
+      points: 0,
+      rebounds: 0,
+      fouls: 0,
+      bestTime: '',
+      swimStyle: '',
+      metersSwum: 0,
+      competitions: 0,
+      wins: 0,
+      bestMark: '',
+      distance: '',
+      podiums: 0,
+      records: 0
     }
   });
 
@@ -81,6 +131,10 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
+  
+  // Nuevos estados para manejar archivos
+  const [photoFile, setPhotoFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Funciones para fechas
   const formatDateForSubmission = (dateString) => {
@@ -152,12 +206,25 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
         yearsOfExperience: player.yearsOfExperience || '',
         height: player.height || '',
         weight: player.weight || '',
+        // ✅ CARGAR ESTADÍSTICAS REALES DEL JUGADOR
         stats: player.stats || {
-          individualWarnings: 0,
-          accumulatedPoints: 0,
-          gamesWon: 0,
-          gamesLost: 0,
-          totalWarnings: 0
+          gamesPlayed: 0,
+          goals: 0,
+          assists: 0,
+          yellowCards: 0,
+          redCards: 0,
+          points: 0,
+          rebounds: 0,
+          fouls: 0,
+          bestTime: '',
+          swimStyle: '',
+          metersSwum: 0,
+          competitions: 0,
+          wins: 0,
+          bestMark: '',
+          distance: '',
+          podiums: 0,
+          records: 0
         }
       });
 
@@ -194,13 +261,17 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
             const result = await response.json();
             if (result.success) {
               const playersCount = result.data.length;
-              const teamConsecutive = String(playersCount + 1).padStart(3, '0');
+              // ✅ CORREGIDO: Solo el consecutivo de jugador debe incrementar
+              const teamConsecutive = "001"; // Fijo para el equipo
               const playerConsecutive = String(playersCount + 1).padStart(3, '0');
               
               setFormData(prev => ({
                 ...prev,
                 teamInternalId: `${selectedTeam.name.replace(/\s+/g, '')}-${teamConsecutive}-${formData.firstName}-${playerConsecutive}`
               }));
+              
+              console.log(`📝 Generando ID interno: ${selectedTeam.name.replace(/\s+/g, '')}-${teamConsecutive}-${formData.firstName}-${playerConsecutive}`);
+              console.log(`👥 Jugadores en equipo: ${playersCount}`);
             }
           } catch (error) {
             console.error('Error contando jugadores:', error);
@@ -286,11 +357,22 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
     
     if (name.startsWith('stats.')) {
       const statField = name.split('.')[1];
+      
+      // ✅ DETERMINAR SI EL CAMPO ES NUMÉRICO O DE TEXTO
+      const numericFields = [
+        'gamesPlayed', 'goals', 'assists', 'yellowCards', 'redCards',
+        'points', 'rebounds', 'fouls', 'metersSwum', 'competitions', 'wins',
+        'podiums', 'records', 'gamesWon', 'gamesLost', 'accumulatedPoints', 
+        'individualWarnings'
+      ];
+      
+      const isNumericField = numericFields.includes(statField);
+      
       setFormData(prev => ({
         ...prev,
         stats: {
           ...prev.stats,
-          [statField]: parseInt(value) || 0
+          [statField]: isNumericField ? parseInt(value) || 0 : value
         }
       }));
     } else {
@@ -304,6 +386,57 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
+
+  // ✅ NUEVA FUNCIÓN: Manejar cambio de archivo
+const handleFileChange = async (e) => {
+  const file = e.target.files[0];
+  
+  if (!file) return;
+
+  // Validar que sea una imagen
+  if (!file.type.startsWith('image/')) {
+    alert('❌ Por favor selecciona un archivo de imagen válido');
+    return;
+  }
+
+  // Validar tamaño (5MB máximo)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('❌ La imagen es demasiado grande. Máximo 5MB permitido.');
+    return;
+  }
+
+  setPhotoFile(file);
+  
+  // Crear URL temporal para vista previa
+  const tempUrl = URL.createObjectURL(file);
+  setFormData(prev => ({
+    ...prev,
+    photo: tempUrl
+  }));
+
+  console.log('🔄 URL temporal creada:', tempUrl);
+
+  // Subir la foto automáticamente al backend
+  try {
+    setIsUploading(true);
+    const uploadedPhotoUrl = await uploadPlayerPhoto(file);
+    
+    console.log('🔗 URL final de la foto:', uploadedPhotoUrl);
+    
+    // Actualizar con la URL real del backend
+    setFormData(prev => ({
+      ...prev,
+      photo: uploadedPhotoUrl
+    }));
+    
+    console.log('✅ Foto guardada en:', uploadedPhotoUrl);
+  } catch (error) {
+    console.error('❌ Error subiendo foto:', error);
+    alert('⚠️ Error al subir la foto. Se usará la vista previa temporal.');
+  } finally {
+    setIsUploading(false);
+  }
+};
 
   const handlePositionToggle = (positionId, isPrimary = false) => {
     setFormData(prev => {
@@ -442,6 +575,25 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
     
     console.log('🎯 Enviando formulario desde paso:', currentStep);
     
+    // ✅ VERIFICAR SI HAY FOTO PENDIENTE POR SUBIR
+    if (photoFile && !isUploading && formData.photo.includes('blob:')) {
+      try {
+        setIsUploading(true);
+        const uploadedPhotoPath = await uploadPlayerPhoto(photoFile);
+        setFormData(prev => ({
+          ...prev,
+          photo: `http://localhost:4000${uploadedPhotoPath}`
+        }));
+        // Pequeña pausa para asegurar que se actualice el estado
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error('❌ Error subiendo foto final:', error);
+        alert('⚠️ Error al subir la foto final. Continuando sin foto...');
+      } finally {
+        setIsUploading(false);
+      }
+    }
+    
     // Validación final antes de enviar (solo campos críticos)
     const finalErrors = {};
     if (!formData.firstName.trim()) finalErrors.firstName = 'El nombre es requerido';
@@ -548,6 +700,114 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
     return primary ? primary.position : null;
   };
 
+  const getSportStatsConfig = () => {
+    const sportName = getSportName(formData.sport);
+    
+    const sportStatsConfig = {
+      'Fútbol': [
+        'gamesPlayed', 'goals', 'assists', 'yellowCards', 'redCards'
+      ],
+      'Baloncesto': [
+        'gamesPlayed', 'points', 'rebounds', 'assists', 'fouls'
+      ],
+      'Natación': [
+        'competitions', 'bestTime', 'metersSwum', 'wins', 'swimStyle'
+      ],
+      'Atletismo': [
+        'competitions', 'bestMark', 'distance', 'wins', 'records'
+      ],
+      'Rugby': [
+        'gamesPlayed', 'tries', 'conversions', 'yellowCards', 'redCards'
+      ],
+      'Hockey': [
+        'gamesPlayed', 'goals', 'assists', 'penalties', 'cards'
+      ],
+      'Balonmano': [
+        'gamesPlayed', 'goals', 'assists', 'exclusions', 'saves'
+      ],
+      'Bádminton': [
+        'gamesWon', 'gamesLost', 'setsWon', 'points', 'tournaments'
+      ],
+      'Pádel': [
+        'gamesWon', 'gamesLost', 'sets', 'points', 'tournaments'
+      ],
+      'Ciclismo': [
+        'races', 'wins', 'kilometers', 'bestTime', 'podiums'
+      ],
+      'Gimnasia': [
+        'competitions', 'medals', 'maxScore', 'apparatus', 'level'
+      ]
+    };
+
+    return sportStatsConfig[sportName] || [
+      'gamesPlayed', 'gamesWon', 'gamesLost', 'accumulatedPoints', 'individualWarnings'
+    ];
+  };
+
+  const getSportSpecificStatsFields = () => {
+    if (!formData.sport) {
+      return []; 
+    }
+
+    const allowedFields = getSportStatsConfig();
+    
+    const statsFields = allowedFields
+      .filter(field => formData.stats[field] !== undefined) 
+      .map(field => {
+        const value = formData.stats[field];
+        return {
+          field: field,
+          label: getStatFieldLabel(field),
+          type: typeof value === 'number' ? 'number' : 'text'
+        };
+      });
+
+    return statsFields;
+  };
+
+  const getStatFieldLabel = (field) => {
+    const labels = {
+      gamesPlayed: 'Partidos Jugados',
+      gamesWon: 'Partidos Ganados',
+      gamesLost: 'Partidos Perdidos',
+      accumulatedPoints: 'Puntos Acumulados',
+      individualWarnings: 'Amonestaciones',
+      goals: 'Goles',
+      assists: 'Asistencias',
+      yellowCards: 'Tarjetas Amarillas',
+      redCards: 'Tarjetas Rojas',
+      points: 'Puntos',
+      rebounds: 'Rebotes',
+      fouls: 'Faltas',
+      bestTime: 'Mejor Tiempo',
+      swimStyle: 'Estilo',
+      metersSwum: 'Metros Nados',
+      bestMark: 'Mejor Marca',
+      distance: 'Distancia',
+      records: 'Récords',
+      tries: 'Try',
+      conversions: 'Conversiones',
+      penalties: 'Penalties',
+      cards: 'Tarjetas',
+      exclusions: 'Exclusiones',
+      saves: 'Paradas',
+      setsWon: 'Sets Ganados',
+      sets: 'Sets',
+      tournaments: 'Torneos',
+      races: 'Carreras',
+      kilometers: 'Kilómetros',
+      competitions: 'Competiciones', 
+      medals: 'Medallas',
+      maxScore: 'Puntuación Máx',
+      apparatus: 'Aparatos',
+      level: 'Nivel',
+      wins: 'Victorias',
+      podiums: 'Podios'
+    };
+
+    return labels[field] || field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+  };
+
   // Renderizado por pasos
   const renderStep1 = () => (
     <div className="form-section">
@@ -596,31 +856,54 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
         </div>
 
         <div className="form-group">
-        <label htmlFor="phone">Teléfono</label>
-        <input
-          type="tel"
-          id="phone"
-          name="phone"
-          value={formData.phone}
-          onChange={handleInputChange}
-          placeholder="Ej: +52 123 456 7890"
-        />
-        
-      </div>
-        <div className="form-group">
-          <label htmlFor="photo">Foto del Jugador (URL)</label>
+          <label htmlFor="phone">Teléfono</label>
           <input
-            type="text"
+            type="tel"
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleInputChange}
+            placeholder="Ej: +52 123 456 7890"
+          />
+        </div>
+
+        {/* ✅ CAMPO DE FOTO ACTUALIZADO */}
+        <div className="form-group">
+          <label htmlFor="photo">Foto del Jugador</label>
+          
+          {/* Input para subir archivo */}
+          <input
+            type="file"
             id="photo"
             name="photo"
-            value={formData.photo}
-            onChange={handleInputChange}
-            placeholder="https://ejemplo.com/foto.jpg"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="file-input"
           />
+          
+          {/* Vista previa de la foto */}
           {formData.photo && (
             <div className="photo-preview">
-              <img src={formData.photo} alt="Vista previa" className="photo-preview-img" />
-              <small>Vista previa de la foto</small>
+              <img 
+                src={formData.photo} 
+                alt="Vista previa" 
+                className="photo-preview-img" 
+              />
+              <small>Vista previa - La foto se guardará automáticamente</small>
+            </div>
+          )}
+          
+          {/* Mostrar archivo seleccionado */}
+          {photoFile && (
+            <div className="file-selected">
+              <span>📸 Archivo seleccionado: {photoFile.name}</span>
+            </div>
+          )}
+          
+          {/* Estado de carga */}
+          {isUploading && (
+            <div className="upload-status">
+              <small>⏳ Subiendo foto...</small>
             </div>
           )}
         </div>
@@ -847,107 +1130,141 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
     </div>
   );
 
-  const renderStep3 = () => (
-    <>
-      <div className="form-section">
-        <h3>💪 Características Físicas</h3>
-        <div className="form-grid">
-          <div className="form-group">
-            <label htmlFor="height">Estatura (cm)</label>
-            <input
-              type="number"
-              id="height"
-              name="height"
-              value={formData.height}
-              onChange={handleInputChange}
-              placeholder="175"
-              min="100"
-              max="250"
-            />
-          </div>
+  const renderStep3 = () => {
+    // Obtener campos de estadísticas específicos del deporte seleccionado
+    const statsFields = getSportSpecificStatsFields();
+    
+    return (
+      <>
+        <div className="form-section">
+          <h3>💪 Características Físicas</h3>
+          <div className="form-grid">
+            <div className="form-group">
+              <label htmlFor="height">Estatura (cm)</label>
+              <input
+                type="number"
+                id="height"
+                name="height"
+                value={formData.height}
+                onChange={handleInputChange}
+                placeholder="175"
+                min="100"
+                max="250"
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="weight">Peso (kg)</label>
-            <input
-              type="number"
-              id="weight"
-              name="weight"
-              value={formData.weight}
-              onChange={handleInputChange}
-              placeholder="70"
-              min="30"
-              max="150"
-            />
+            <div className="form-group">
+              <label htmlFor="weight">Peso (kg)</label>
+              <input
+                type="number"
+                id="weight"
+                name="weight"
+                value={formData.weight}
+                onChange={handleInputChange}
+                placeholder="70"
+                min="30"
+                max="150"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="form-section">
-        <h3>📊 Estadísticas y Preferencias</h3>
-        <div className="form-grid">
-          <div className="form-group">
-            <label htmlFor="hobbies">Pasatiempos</label>
-            <textarea
-              id="hobbies"
-              name="hobbies"
-              value={formData.hobbies}
-              onChange={handleInputChange}
-              placeholder="Pasatiempos del jugador..."
-              rows="3"
-            />
-          </div>
+        {/* ✅ SECCIÓN DINÁMICA: ESTADÍSTICAS DEPORTIVAS ESPECÍFICAS */}
+        <div className="form-section">
+          <h3>📊 Estadísticas Deportivas</h3>
+          <p className="section-description">
+            {formData.sport 
+              ? `Estadísticas específicas para ${getSportName(formData.sport)}`
+              : 'Selecciona un deporte en el paso anterior para ver estadísticas específicas'
+            }
+          </p>
+          
+          {formData.sport ? (
+            statsFields.length > 0 ? (
+              <div className="form-grid">
+                {statsFields.map((statField) => (
+                  <div key={statField.field} className="form-group">
+                    <label htmlFor={`stats.${statField.field}`}>
+                      {statField.label}
+                    </label>
+                    {statField.type === 'number' ? (
+                      <input
+                        type="number"
+                        id={`stats.${statField.field}`}
+                        name={`stats.${statField.field}`}
+                        value={formData.stats[statField.field] || 0}
+                        onChange={handleInputChange}
+                        min="0"
+                        placeholder="0"
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        id={`stats.${statField.field}`}
+                        name={`stats.${statField.field}`}
+                        value={formData.stats[statField.field] || ''}
+                        onChange={handleInputChange}
+                        placeholder={`Ingresa ${statField.label.toLowerCase()}`}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-stats-message">
+                <p>No hay campos de estadísticas configurados para {getSportName(formData.sport)}.</p>
+              </div>
+            )
+          ) : (
+            <div className="no-sport-message">
+              <p>⚠️ Por favor, selecciona un deporte en el paso anterior para habilitar las estadísticas.</p>
+            </div>
+          )}
+        </div>
 
-          <div className="form-group">
-            <label htmlFor="favoriteMusic">Música Favorita</label>
-            <input
-              type="text"
-              id="favoriteMusic"
-              name="favoriteMusic"
-              value={formData.favoriteMusic}
-              onChange={handleInputChange}
-              placeholder="Géneros o artistas favoritos"
-            />
-          </div>
+        <div className="form-section">
+          <h3>🎵 Preferencias Personales</h3>
+          <div className="form-grid">
+            <div className="form-group">
+              <label htmlFor="hobbies">Pasatiempos</label>
+              <textarea
+                id="hobbies"
+                name="hobbies"
+                value={formData.hobbies}
+                onChange={handleInputChange}
+                placeholder="Pasatiempos del jugador..."
+                rows="3"
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="socialMedia">Redes Sociales</label>
-            <input
-              type="text"
-              id="socialMedia"
-              name="socialMedia"
-              value={formData.socialMedia}
-              onChange={handleInputChange}
-              placeholder="@usuario o enlaces"
-            />
-          </div>
+            <div className="form-group">
+              <label htmlFor="favoriteMusic">Música Favorita</label>
+              <input
+                type="text"
+                id="favoriteMusic"
+                name="favoriteMusic"
+                value={formData.favoriteMusic}
+                onChange={handleInputChange}
+                placeholder="Géneros o artistas favoritos"
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="stats.individualWarnings">Amonestaciones Individuales</label>
-            <input
-              type="number"
-              id="stats.individualWarnings"
-              name="stats.individualWarnings"
-              value={formData.stats.individualWarnings}
-              onChange={handleInputChange}
-              min="0"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="stats.accumulatedPoints">Puntos Acumulados</label>
-            <input
-              type="number"
-              id="stats.accumulatedPoints"
-              name="stats.accumulatedPoints"
-              value={formData.stats.accumulatedPoints}
-              onChange={handleInputChange}
-              min="0"
-            />
+            <div className="form-group">
+              <label htmlFor="socialMedia">Redes Sociales</label>
+              <input
+                type="text"
+                id="socialMedia"
+                name="socialMedia"
+                value={formData.socialMedia}
+                onChange={handleInputChange}
+                placeholder="@usuario o enlaces"
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </>
-  );
+      </>
+    );
+  };
 
   return (
     <div className="player-form-overlay">
@@ -955,22 +1272,6 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
         <div className="player-form-header">
           <h2>{isEditing ? '✏️ Editar Jugador' : '➕ Registrar Nuevo Jugador'}</h2>
           <button onClick={onCancel} className="close-btn" type="button">✕</button>
-        </div>
-
-        {/* Indicador de Pasos */}
-        <div className="step-indicator">
-          <div className={`step ${currentStep === 1 ? 'active' : ''}`}>
-            <span>1</span>
-            <label>Información Personal</label>
-          </div>
-          <div className={`step ${currentStep === 2 ? 'active' : ''}`}>
-            <span>2</span>
-            <label>Información Deportiva</label>
-          </div>
-          <div className={`step ${currentStep === 3 ? 'active' : ''}`}>
-            <span>3</span>
-            <label>Características</label>
-          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="player-form">
@@ -994,8 +1295,12 @@ const PlayerForm = ({ player, onSave, onCancel, isEditing = false }) => {
                 Siguiente ➡️
               </button>
             ) : (
-              <button type="submit" className="btn-submit" disabled={loading}>
-                {loading ? '⏳ Guardando...' : (isEditing ? '💾 Actualizar Jugador' : '✅ Registrar Jugador')}
+              <button 
+                type="submit" 
+                className="btn-submit" 
+                disabled={loading || isUploading}
+              >
+                {loading || isUploading ? '⏳ Guardando...' : (isEditing ? '💾 Actualizar Jugador' : '✅ Registrar Jugador')}
               </button>
             )}
             
